@@ -2,9 +2,12 @@
 <resources>
 
     <declare-styleable name="fancytrendchart">
-        <attr name="drawCircle" format="boolean" />
-        <attr name="drawCircleBorder" format="boolean" />
-        <attr name="borderColor" format="color" />
+        <attr name="xAxisColor" format="color" />
+        <attr name="xAxisTextColor" format="color" />
+        <attr name="xGridColor" format="color" />
+        <attr name="yAxisColor" format="color" />
+        <attr name="yAxisTextColor" format="color" />
+        <attr name="yGridColor" format="color" />
     </declare-styleable>
 
 </resources>
