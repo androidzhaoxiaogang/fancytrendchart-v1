@@ -1,4 +1,5 @@
 package xg.fancytrendchart;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,8 +52,9 @@ public class TrendChartView extends View {
 	
 	private final Rect textBounds = new Rect();
 	
-	private int xAxispadding = 20;
+	private int xAxispadding = 60;
 	private int yAxispadding = 20;
+	private int yTextpadding = 5;
 	
 	private float width;
 	private float height;
@@ -93,6 +95,7 @@ public class TrendChartView extends View {
 		DisplayMetrics dm = getResources().getDisplayMetrics();
 		xAxispadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, xAxispadding, dm);
 		yAxispadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, yAxispadding, dm);
+		yTextpadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, yTextpadding, dm);
 		titleTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, titleTextSize, dm);
 		xAxisTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, xAxisTextSize, dm);
 		
@@ -271,18 +274,23 @@ public class TrendChartView extends View {
 		float xGridStart = startXaxis;
 		float xValueHeight = textBounds.height();
 		
+		if ( xValueList == null || xValueList.size() < xGridCount) {
+			return ;
+		}
+		
 		for (int i = 0; i < xGridCount; i++) {
-			if (xValueList.size() >= xGridCount) {
-				if (i == 0) {
-					canvas.drawText(xValueList.get(i), startXaxis, 
-							height - yAxispadding + xValueHeight*2, paint);
-				} else if (i == xGridCount - 1) {
-					paint.getTextBounds(xValueList.get(i), 0, 
-							xValueList.get(i).length(), textBounds);
-					float xValuewidth = textBounds.width();
-					canvas.drawText(xValueList.get(i), xGridStart - xValuewidth, 
-							height - yAxispadding + xValueHeight*2, paint);
-				}
+			if (i == 0) {
+				final float textHeight =  height - yAxispadding + xValueHeight * 2;
+				canvas.drawText(xValueList.get(i), startXaxis, textHeight, paint);
+			} else if (i == xGridCount - 1) {
+				final int length = xValueList.get(i).length();
+				paint.getTextBounds(xValueList.get(i), 0, length, textBounds);
+				
+				final float xValuewidth = textBounds.width();
+				final float textHeight = height - yAxispadding + xValueHeight * 2;
+				final float textWidth = xGridStart - xValuewidth;
+				
+				canvas.drawText(xValueList.get(i), textWidth, textHeight, paint);
 			}
 			
 			LinearGradient gradient = new LinearGradient(xGridStart, 
@@ -296,16 +304,56 @@ public class TrendChartView extends View {
 	}
 	
 	private void drawYGridLines(Canvas canvas) {
-		float yGridSpace = (height - yAxispadding * 2 - titleHeight) / (yGridCount - 1);
+		float yGridSpace = (height - yAxispadding * 2 - titleHeight) / yGridCount;
 		float yGridStart = height - yAxispadding - yGridSpace;
 		
-		PathEffect effects = new DashPathEffect(new float[]{4,4,4,4}, 1);
+		final PathEffect effects = new DashPathEffect(new float[]{4,4,4,4}, 1);
+		final DecimalFormat format = new DecimalFormat("##0.00"); 
+		
+		final double minYValue = getMinY(yValueList);
+		final double maxYValue = getMaxY(yValueList);
+		
+		String tempValue;
+		
+		if (yValueList == null || yValueList.size() < yGridCount)  {
+			return ;
+		}
+		
+		float yTextWidth;
+		float yTextHeight;
+		float textWidth;
+		float textHeight;
 		
 		for (int i = 0; i < yGridCount; i++) {
-			
-			
-			
-			
+			if (i == 0) {
+				tempValue = format.format(minYValue);
+				paint.getTextBounds(tempValue, 0, tempValue.length(), textBounds);
+				
+				yTextWidth = textBounds.width();
+				yTextHeight = textBounds.height();
+				textWidth = startXaxis - yTextWidth - yTextpadding;
+				textHeight = yGridStart + yTextHeight / 2;
+				canvas.drawText(tempValue, textWidth, textHeight, paint);
+			} else if (i == yGridCount - 1) {
+				tempValue = format.format(maxYValue);
+				paint.getTextBounds(tempValue, 0, tempValue.length(), textBounds);
+				
+				yTextWidth = textBounds.width();
+				yTextHeight = textBounds.height();
+				textWidth = startXaxis - yTextWidth - yTextpadding;
+				textHeight = yGridStart + yTextHeight / 2;
+				canvas.drawText(tempValue, textWidth, textHeight, paint);
+			} else {
+				double avg = (maxYValue - minYValue) / (yGridCount - 1);
+				tempValue = format.format(minYValue + avg * i); 
+				paint.getTextBounds(tempValue, 0, tempValue.length(), textBounds);
+				
+				yTextWidth = textBounds.width();
+				yTextHeight = textBounds.height();
+				textWidth = startXaxis - yTextWidth - yTextpadding;
+				textHeight = yGridStart + yTextHeight / 2;
+				canvas.drawText(tempValue, textWidth, textHeight, paint);
+			}
 			
 			yGridPaint.setColor(yAxisColor);
 			yGridPaint.setStrokeWidth(2);
@@ -322,5 +370,33 @@ public class TrendChartView extends View {
 		
 	}
 
+	
+	private double getMaxY(List<String> yValueList) {
+		double max = 0;
+		if (!yValueList.isEmpty()) {
+		    max = Double.valueOf(yValueList.get(0));
+		    for (String value : yValueList) {
+		        double temp = Double.valueOf(value);
+		        if (temp > max)  {
+		            max = temp;
+		        }
+		    } 
+		}
+		return max;
+	}
+	
+	private double getMinY(List<String> yValueList) {
+		double min = 0;
+		if (!yValueList.isEmpty()) {
+		    min = Double.valueOf(yValueList.get(0));
+		    for (String value : yValueList) {
+		        double temp = Double.valueOf(value);
+		        if (temp < min)  {
+		        	min = temp;
+		        }
+		    } 
+		}
+		return min;
+	}
 
 }
