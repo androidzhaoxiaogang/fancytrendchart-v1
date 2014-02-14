@@ -316,10 +316,6 @@ public class TrendChartView extends View {
 			return ;
 		}
 		
-		paint.setColor(yAxisColor);
-		paint.setStrokeWidth(2);
-		paint.setTextSize(xAxisTextSize);
-		
 		for (int i = 0; i < yGridCount; i++) {
 			if (i == 0) {
 				tempValue = format.format(minYValue);
