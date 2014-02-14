@@ -1,4 +1,5 @@
 package xg.fancytrendchart;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,8 +8,11 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PathEffect;
 import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.Bitmap.Config;
@@ -20,6 +24,7 @@ import android.view.View;
 
 
 public class TrendChartView extends View {
+	private final String MAGIC_STRING = "11.11";
 	private boolean drawGradient = false;
 	
 	private int xTitleColor = 0xFF129FCD;
@@ -43,19 +48,23 @@ public class TrendChartView extends View {
 	private int xAxisStrokeWidth = 2;
 	
 	private int xGridCount = 7;
+	private int yGridCount = 5;
 	
 	private final Rect textBounds = new Rect();
 	
-	private int xAxispadding = 20;
+	private int xAxispadding = 60;
 	private int yAxispadding = 20;
+	private int yTextpadding = 5;
 	
 	private float width;
 	private float height;
 	private float titleHeight;
 	private float startXaxis;
+	private float startYaxis;
 	
 	private Paint paint;
 	private Paint xGridPaint;
+	private Paint yGridPaint;
 	
 	private boolean disableTouch;
 	
@@ -86,6 +95,7 @@ public class TrendChartView extends View {
 		DisplayMetrics dm = getResources().getDisplayMetrics();
 		xAxispadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, xAxispadding, dm);
 		yAxispadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, yAxispadding, dm);
+		yTextpadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, yTextpadding, dm);
 		titleTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, titleTextSize, dm);
 		xAxisTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, xAxisTextSize, dm);
 		
@@ -102,6 +112,10 @@ public class TrendChartView extends View {
 		yAxispadding = a.getInt(R.styleable.FancyTrendChart_yAxisPadding, yAxispadding);
 		a.recycle();
 		
+		initChartData();
+	}
+	
+	private void initChartData() {
 		xValueList = new ArrayList<String>();
 		yValueList = new ArrayList<String>();
 		
@@ -110,6 +124,10 @@ public class TrendChartView extends View {
 		
 		xGridPaint = new Paint();
 		xGridPaint.setAntiAlias(true);
+		
+		yGridPaint = new Paint();
+		yGridPaint.setAntiAlias(true);
+		yGridPaint.setStyle(Paint.Style.STROKE);
 	}
 	
 	@Override
@@ -126,12 +144,7 @@ public class TrendChartView extends View {
 		width = this.getWidth();
 		height = this.getHeight();
 		
-//		if (chartBitmap == null) {
-//			initChartBitmap();
-//		}
-		
 		startDrawChart(canvas);
-		//canvas.drawBitmap(chartBitmap, 0, 0, paint);
 	}
 
 	/**
@@ -184,6 +197,14 @@ public class TrendChartView extends View {
 		this.xGridCount = xGridCount;
 	}
 	
+	public int getyGridCount() {
+		return yGridCount;
+	}
+
+	public void setyGridCount(int yGridCount) {
+		this.yGridCount = yGridCount;
+	}
+	
 	public boolean isDisableTouch() {
 		return disableTouch;
 	}
@@ -211,12 +232,9 @@ public class TrendChartView extends View {
 	}
 	
 	private void startDrawChart(Canvas canvas){
-		//chartBitmap = Bitmap.createBitmap((int)width, (int)height, Config.ARGB_8888);
-		//Canvas canvas = new Canvas(chartBitmap);
 		drawTopTitle(canvas);
 		drawXYAxises(canvas);
 		drawTrendLine(canvas);
-		//canvas.save();
 	}
 	
 	private void drawTopTitle(Canvas canvas) {
@@ -231,30 +249,42 @@ public class TrendChartView extends View {
 	
 	private void drawXYAxises(Canvas canvas) {
 		drawXaxis(canvas);
+		
+		drawXGridLines(canvas);
+		drawYGridLines(canvas);
 	}
 	
 	private void drawXaxis(Canvas canvas) {
-		paint.getTextBounds("11.11", 0, 1, textBounds);
+		paint.getTextBounds(MAGIC_STRING, 0, 1, textBounds);
 		startXaxis = textBounds.width() + xAxispadding / 2;
 		paint.setColor(xAxisColor);
 		paint.setStrokeWidth(xAxisStrokeWidth);
 		paint.setTextSize(xAxisTextSize);
 		canvas.drawLine(startXaxis, height - yAxispadding, width - xAxispadding/2, 
 				height - yAxispadding, paint); //bottom line
-		
+	}
+	
+	private void drawXGridLines(Canvas canvas) {
 		paint.setColor(xAxisColor);
 		paint.setStrokeWidth(xAxisStrokeWidth);
 		paint.setTextSize(xAxisTextSize);
+		paint.getTextBounds(MAGIC_STRING, 0, 1, textBounds);
 		
-		float xGridSpace = (width - xAxispadding / 2 - startXaxis) / 6;
+		float xGridSpace = (width - xAxispadding / 2 - startXaxis) / (xGridCount - 1);
 		float xGridStart = startXaxis;
+		float xValueHeight = textBounds.height();
 		
 		for (int i = 0; i < xGridCount; i++) {
 			if (xValueList.size() >= xGridCount) {
 				if (i == 0) {
-					canvas.drawText(xValueList.get(i), startXaxis, height - yAxispadding, paint);
+					canvas.drawText(xValueList.get(i), startXaxis, 
+							height - yAxispadding + xValueHeight*2, paint);
 				} else if (i == xGridCount - 1) {
-					canvas.drawText(xValueList.get(i), xGridStart, height - yAxispadding, paint);
+					paint.getTextBounds(xValueList.get(i), 0, 
+							xValueList.get(i).length(), textBounds);
+					float xValuewidth = textBounds.width();
+					canvas.drawText(xValueList.get(i), xGridStart - xValuewidth, 
+							height - yAxispadding + xValueHeight*2, paint);
 				}
 			}
 			
@@ -263,8 +293,62 @@ public class TrendChartView extends View {
 					xAxisColor, xAxisGridEndColor, Shader.TileMode.MIRROR);
 			xGridPaint.setShader(gradient);
 			canvas.drawLine(xGridStart, height - yAxispadding, xGridStart, 
-					yAxispadding + titleHeight / 2, paint);
+					yAxispadding + titleHeight, xGridPaint);
 			xGridStart += xGridSpace;
+		}
+	}
+	
+	private void drawYGridLines(Canvas canvas) {
+		float yGridSpace = (height - yAxispadding * 2 - titleHeight) / yGridCount;
+		float yGridStart = height - yAxispadding - yGridSpace;
+		
+		final PathEffect effects = new DashPathEffect(new float[]{4,4,4,4}, 1);
+		final DecimalFormat format = new DecimalFormat("##0.00"); 
+		
+		final double minYValue = getMinY(yValueList);
+		final double maxYValue = getMaxY(yValueList);
+		
+		float yTextWidth = 0;	
+		float yTextHeight = 0;
+		String tempValue;
+		
+		if (yValueList.size() < yGridCount)  {
+			return ;
+		}
+		
+		paint.setColor(yAxisColor);
+		paint.setStrokeWidth(2);
+		paint.setTextSize(xAxisTextSize);
+		
+		for (int i = 0; i < yGridCount; i++) {
+			if (i == 0) {
+				tempValue = format.format(minYValue);
+				paint.getTextBounds(tempValue, 0, tempValue.length(), textBounds);
+				yTextWidth = textBounds.width();
+				canvas.drawText(tempValue, startXaxis - yTextWidth - yTextpadding, 
+						yGridStart + yTextHeight / 2, paint);
+			} else if (i == yGridCount - 1) {
+				tempValue = format.format(maxYValue);
+				paint.getTextBounds(tempValue, 0, tempValue.length(), textBounds);
+				yTextWidth = textBounds.width();
+				yTextHeight = textBounds.height();
+				canvas.drawText(tempValue, startXaxis - yTextWidth - yTextpadding, 
+						yGridStart + yTextHeight / 2, paint);
+			} else {
+				double avg = (maxYValue - minYValue) / (yGridCount - 1);
+				tempValue = format.format(minYValue + avg * i); 
+				canvas.drawText(tempValue, startXaxis - yTextWidth - yTextpadding, 
+						yGridStart + yTextHeight / 2, paint);
+			}
+			
+			yGridPaint.setColor(yAxisColor);
+			yGridPaint.setStrokeWidth(2);
+			Path path = new Path();       
+	        path.moveTo(startXaxis, yGridStart);  
+	        path.lineTo(width - xAxispadding / 2,yGridStart);        
+	        yGridPaint.setPathEffect(effects);  
+	        canvas.drawPath(path, yGridPaint); 
+	        yGridStart -= yGridSpace;
 		}
 	}
 	
@@ -272,5 +356,33 @@ public class TrendChartView extends View {
 		
 	}
 
+	
+	private double getMaxY(List<String> yValueList) {
+		double max = 0;
+		if (!yValueList.isEmpty()) {
+		    max = Double.valueOf(yValueList.get(0)).doubleValue();
+		    for (String value : yValueList) {
+		        double temp = Double.valueOf(value).doubleValue();
+		        if (temp > max)  {
+		            max = temp;
+		        }
+		    } 
+		}
+		return max;
+	}
+	
+	private double getMinY(List<String> yValueList) {
+		double min = 0;
+		if (!yValueList.isEmpty()) {
+		    min = Double.valueOf(yValueList.get(0)).doubleValue();
+		    for (String value : yValueList) {
+		        double temp = Double.valueOf(value).doubleValue();
+		        if (temp < min)  {
+		        	min = temp;
+		        }
+		    } 
+		}
+		return min;
+	}
 
 }
