@@ -302,6 +302,11 @@ public class TrendChartView extends View {
 		PathEffect effects = new DashPathEffect(new float[]{4,4,4,4}, 1);
 		
 		for (int i = 0; i < yGridCount; i++) {
+			
+			
+			
+			
+			
 			yGridPaint.setColor(yAxisColor);
 			yGridPaint.setStrokeWidth(2);
 			Path path = new Path();       
