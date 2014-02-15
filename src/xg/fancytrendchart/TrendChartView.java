@@ -369,6 +369,10 @@ public class TrendChartView extends View {
 	private void drawTrendLine(Canvas canvas) {
 		
 	}
+	
+	private void drawTrendBackground(Canvas canvas) {
+		
+	}
 
 	
 	private double getMaxY(List<String> yValueList) {
