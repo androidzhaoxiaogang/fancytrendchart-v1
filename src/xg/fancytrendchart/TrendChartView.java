@@ -38,6 +38,7 @@ public class TrendChartView extends View {
 	
 	private int lineColor = 0x4cf7d621;
 	private int lineStartColor = 0x4cffffff;
+	private int vertexColor = Color.RED;
 	
 	private int titleTextSize = 18;
 	private int xAxisTextSize = 12;
@@ -53,7 +54,7 @@ public class TrendChartView extends View {
 	private float yGridSpace;
 	private float xGridSpace;
 	
-	private int xAxispadding = 60;
+	private int xAxispadding = 50;
 	private int yAxisPadding = 20;
 	private int yTextpadding = 5;
 	
@@ -69,6 +70,7 @@ public class TrendChartView extends View {
 	private Paint xGridPaint;
 	private Paint yGridPaint;
 	private Paint blockPaint;
+	private Paint vertextPaint;
 	
 	private boolean disableTouch;
 	
@@ -137,6 +139,10 @@ public class TrendChartView extends View {
 		blockPaint = new Paint();
 		blockPaint.setAntiAlias(true);
 		blockPaint.setStyle(Paint.Style.FILL);
+		
+		vertextPaint = new Paint();
+		vertextPaint.setAntiAlias(true);
+		vertextPaint.setStyle(Paint.Style.STROKE);
 	}
 	
 	@Override
@@ -198,22 +204,6 @@ public class TrendChartView extends View {
 		this.titleStrokeWidth = titleStrokeWidth;
 	}
 	
-	public int getxGridCount() {
-		return xGridCount;
-	}
-
-	public void setxGridCount(int xGridCount) {
-		this.xGridCount = xGridCount;
-	}
-	
-	public int getyGridCount() {
-		return yGridCount;
-	}
-
-	public void setyGridCount(int yGridCount) {
-		this.yGridCount = yGridCount;
-	}
-	
 	public boolean isDisableTouch() {
 		return disableTouch;
 	}
@@ -229,6 +219,7 @@ public class TrendChartView extends View {
 	public void setxValueList(List<String> xValueList) {
 		this.xValueList.clear();
 		this.xValueList.addAll(xValueList);
+		xGridCount = xValueList.size();
 	}
 	
 	public List<String> getyValueList() {
@@ -238,13 +229,14 @@ public class TrendChartView extends View {
 	public void setyValueList(List<String> yValueList) {
 		this.yValueList.clear();
 		this.yValueList.addAll(yValueList);
+		yGridCount = yValueList.size();
 	}
 	
 	private void startDrawChart(Canvas canvas){
 		drawTopTitle(canvas);
 		drawXYAxises(canvas);
 		drawTrendLine(canvas);
-		//drawTrendBlock(canvas);
+		drawTrendBlock(canvas);
 	}
 	
 	private void drawTopTitle(Canvas canvas) {
@@ -385,13 +377,13 @@ public class TrendChartView extends View {
 	private void drawTrendLine(Canvas canvas) {
 		final float lineStart = startXaxis;
 		final int size = Math.min(xGridCount, yGridCount);
-		
+
 		for (int i = 0; i < size; i++) {
 			vertex[i][0] = lineStart + i * xGridSpace;
 			vertex[i][1] = yAxisPadding + yGridSpace + getPointY(yValueList.get(i));
 		}
 
-		paint.setStrokeWidth(2);
+		paint.setStrokeWidth(4);
 		paint.setColor(lineColor);
 		float[] pts = new float[4 * xGridCount];
 		
@@ -399,6 +391,7 @@ public class TrendChartView extends View {
 		pts[1] = height - vertex[0][1];
 		pts[2] = vertex[0][0];
 		pts[3] = height - vertex[0][1];
+
 		for (int i = 1; i < size; i++) {
 			pts[4 * i] = vertex[i - 1][0];
 			pts[4 * i + 1] = height - vertex[i -1][1];
@@ -424,11 +417,11 @@ public class TrendChartView extends View {
 	private void drawTrendBlock(Canvas canvas) {
 		for (int i = 0; i < xGridCount - 1; i++) {
 			Path path = new Path();
-			path.moveTo(vertex[i][0], height - vertex[i][1]);// 此点为多边形的起点
+			path.moveTo(vertex[i][0], height - vertex[i][1]);
 			path.lineTo(vertex[i][0], height - yAxisPadding);
 			path.lineTo(vertex[i + 1][0], height - yAxisPadding);
 			path.lineTo(vertex[i + 1][0], height - vertex[i + 1][1]);
-			path.close(); // 使这些点构成封闭的多边形
+			path.close();
 			canvas.drawPath(path, blockPaint);
 		}
 	}
