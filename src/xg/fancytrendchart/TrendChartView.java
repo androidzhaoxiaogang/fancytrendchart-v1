@@ -384,6 +384,7 @@ public class TrendChartView extends View {
 	private void drawTrendLine(Canvas canvas) {
 		float ave_x = (width - yAxisPadding / 2 - startXaxis) / (xGridCount - 1);
 		float x = startXaxis;
+		
 		for (int i = 0; i < yGridCount; i++) {
 			vertex[i][0] = x + i * ave_x;
 			vertex[i][1] = yAxisPadding + yGridSpace + getPointY(yValueList.get(i));
