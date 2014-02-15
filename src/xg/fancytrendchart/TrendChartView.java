@@ -5,7 +5,6 @@ import java.util.List;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -15,7 +14,6 @@ import android.graphics.Path;
 import android.graphics.PathEffect;
 import android.graphics.Rect;
 import android.graphics.Shader;
-import android.graphics.Bitmap.Config;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -38,7 +36,8 @@ public class TrendChartView extends View {
 	private int xAxisGridEndColor = Color.WHITE;
 	private int yAxisGridColor = 0xFF129FCD;
 	
-	private int lineColor = 0xFF129FCD;
+	private int lineColor = 0x4cf7d621;
+	private int lineStartColor = 0x4cffffff;
 	
 	private int titleTextSize = 18;
 	private int xAxisTextSize = 12;
@@ -53,22 +52,21 @@ public class TrendChartView extends View {
 	private final Rect textBounds = new Rect();
 	
 	private int xAxispadding = 60;
-	private int yAxispadding = 20;
+	private int yAxisPadding = 20;
 	private int yTextpadding = 5;
 	
 	private float width;
 	private float height;
 	private float titleHeight;
 	private float startXaxis;
-	private float startYaxis;
+	//private float startYaxis;
 	
 	private Paint paint;
 	private Paint xGridPaint;
 	private Paint yGridPaint;
+	private Paint blockPaint;
 	
 	private boolean disableTouch;
-	
-	private Bitmap chartBitmap = null;
 	
 	private String title;
 	private List<String> xValueList;
@@ -94,7 +92,7 @@ public class TrendChartView extends View {
 	private void initTrendChart(Context context, AttributeSet attrs) {
 		DisplayMetrics dm = getResources().getDisplayMetrics();
 		xAxispadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, xAxispadding, dm);
-		yAxispadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, yAxispadding, dm);
+		yAxisPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, yAxisPadding, dm);
 		yTextpadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, yTextpadding, dm);
 		titleTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, titleTextSize, dm);
 		xAxisTextSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, xAxisTextSize, dm);
@@ -109,7 +107,7 @@ public class TrendChartView extends View {
 		yAxisGridColor = a.getInt(R.styleable.FancyTrendChart_yGridColor, yAxisGridColor);
 		lineColor = a.getInt(R.styleable.FancyTrendChart_lineColor, lineColor);
 		xAxispadding = a.getInt(R.styleable.FancyTrendChart_xAxisPadding, xAxispadding);
-		yAxispadding = a.getInt(R.styleable.FancyTrendChart_yAxisPadding, yAxispadding);
+		yAxisPadding = a.getInt(R.styleable.FancyTrendChart_yAxisPadding, yAxisPadding);
 		a.recycle();
 		
 		initChartData();
@@ -128,6 +126,10 @@ public class TrendChartView extends View {
 		yGridPaint = new Paint();
 		yGridPaint.setAntiAlias(true);
 		yGridPaint.setStyle(Paint.Style.STROKE);
+		
+		blockPaint = new Paint();
+		blockPaint.setAntiAlias(true);
+		blockPaint.setStyle(Paint.Style.FILL);
 	}
 	
 	@Override
@@ -244,7 +246,7 @@ public class TrendChartView extends View {
 		paint.getTextBounds(title, 0, 1, textBounds);
 		
 		titleHeight = textBounds.height();
-		canvas.drawText(title, xAxispadding / 2, yAxispadding / 2 + titleHeight, paint);
+		canvas.drawText(title, xAxispadding / 2, yAxisPadding / 2 + titleHeight, paint);
 	}
 	
 	private void drawXYAxises(Canvas canvas) {
@@ -260,8 +262,8 @@ public class TrendChartView extends View {
 		paint.setColor(xAxisColor);
 		paint.setStrokeWidth(xAxisStrokeWidth);
 		paint.setTextSize(xAxisTextSize);
-		canvas.drawLine(startXaxis, height - yAxispadding, width - xAxispadding/2, 
-				height - yAxispadding, paint); //bottom line
+		canvas.drawLine(startXaxis, height - yAxisPadding, width - xAxispadding/2, 
+				height - yAxisPadding, paint); //bottom line
 	}
 	
 	private void drawXGridLines(Canvas canvas) {
@@ -280,32 +282,32 @@ public class TrendChartView extends View {
 		
 		for (int i = 0; i < xGridCount; i++) {
 			if (i == 0) {
-				final float textHeight =  height - yAxispadding + xValueHeight * 2;
+				final float textHeight =  height - yAxisPadding + xValueHeight * 2;
 				canvas.drawText(xValueList.get(i), startXaxis, textHeight, paint);
 			} else if (i == xGridCount - 1) {
 				final int length = xValueList.get(i).length();
 				paint.getTextBounds(xValueList.get(i), 0, length, textBounds);
 				
 				final float xValuewidth = textBounds.width();
-				final float textHeight = height - yAxispadding + xValueHeight * 2;
+				final float textHeight = height - yAxisPadding + xValueHeight * 2;
 				final float textWidth = xGridStart - xValuewidth;
 				
 				canvas.drawText(xValueList.get(i), textWidth, textHeight, paint);
 			}
 			
 			LinearGradient gradient = new LinearGradient(xGridStart, 
-					height - yAxispadding, xGridStart, yAxispadding, 
+					height - yAxisPadding, xGridStart, yAxisPadding, 
 					xAxisColor, xAxisGridEndColor, Shader.TileMode.MIRROR);
 			xGridPaint.setShader(gradient);
-			canvas.drawLine(xGridStart, height - yAxispadding, xGridStart, 
-					yAxispadding + titleHeight, xGridPaint);
+			canvas.drawLine(xGridStart, height - yAxisPadding, xGridStart, 
+					yAxisPadding + titleHeight, xGridPaint);
 			xGridStart += xGridSpace;
 		}
 	}
 	
 	private void drawYGridLines(Canvas canvas) {
-		float yGridSpace = (height - yAxispadding * 2 - titleHeight) / yGridCount;
-		float yGridStart = height - yAxispadding - yGridSpace;
+		float yGridSpace = (height - yAxisPadding * 2 - titleHeight) / yGridCount;
+		float yGridStart = height - yAxisPadding - yGridSpace;
 		
 		final PathEffect effects = new DashPathEffect(new float[]{4,4,4,4}, 1);
 		final DecimalFormat format = new DecimalFormat("##0.00"); 
@@ -364,16 +366,21 @@ public class TrendChartView extends View {
 	        canvas.drawPath(path, yGridPaint); 
 	        yGridStart -= yGridSpace;
 		}
+		
+		final float blockStart = startXaxis;
+		LinearGradient gradient = new LinearGradient(blockStart, height
+				- yAxisPadding, blockStart, yAxisPadding + yGridSpace,
+				lineStartColor, lineColor, Shader.TileMode.MIRROR);
+		blockPaint.setShader(gradient);
 	}
 	
 	private void drawTrendLine(Canvas canvas) {
 		
 	}
 	
-	private void drawTrendBackground(Canvas canvas) {
+	private void drawTrendBlock(Canvas canvas) {
 		
 	}
-
 	
 	private double getMaxY(List<String> yValueList) {
 		double max = 0;
