@@ -401,10 +401,10 @@ public class TrendChartView extends View {
 		canvas.drawLines(pts, paint);
 	}
 	
-	private float getPointY(String profit) {
+	private float getPointY(String valueY) {
 		double minYValue = getMinY(yValueList);
 		double maxYValue = getMaxY(yValueList);
-		float temp = Float.valueOf(profit);
+		float temp = Float.valueOf(valueY);
 		
 		if(minYValue == maxYValue){
 			minYValue = 0;
