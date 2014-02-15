@@ -51,6 +51,7 @@ public class TrendChartView extends View {
 	
 	private Rect textBounds;
 	private float yGridSpace;
+	private float xGridSpace;
 	
 	private int xAxispadding = 60;
 	private int yAxisPadding = 20;
@@ -279,7 +280,7 @@ public class TrendChartView extends View {
 		paint.setTextSize(xAxisTextSize);
 		paint.getTextBounds(MAGIC_STRING, 0, 1, textBounds);
 		
-		float xGridSpace = (width - xAxispadding / 2 - startXaxis) / (xGridCount - 1);
+		xGridSpace = (width - xAxispadding / 2 - startXaxis) / (xGridCount - 1);
 		float xGridStart = startXaxis;
 		float xValueHeight = textBounds.height();
 		
@@ -382,24 +383,24 @@ public class TrendChartView extends View {
 	}
 	
 	private void drawTrendLine(Canvas canvas) {
-		float ave_x = (width - yAxisPadding / 2 - startXaxis) / (xGridCount - 1);
-		float x = startXaxis;
+		final float lineStart = startXaxis;
+		final int size = Math.min(xGridCount, yGridCount);
 		
-		for (int i = 0; i < yGridCount; i++) {
-			vertex[i][0] = x + i * ave_x;
+		for (int i = 0; i < size; i++) {
+			vertex[i][0] = lineStart + i * xGridSpace;
 			vertex[i][1] = yAxisPadding + yGridSpace + getPointY(yValueList.get(i));
 		}
 
 		paint.setStrokeWidth(2);
 		paint.setColor(lineColor);
 		float[] pts = new float[4 * xGridCount];
-		//4个坐标点，绘成曲线，数组中4个值为一条直线
+		
 		pts[0] = startXaxis;
 		pts[1] = height - vertex[0][1];
 		pts[2] = vertex[0][0];
 		pts[3] = height - vertex[0][1];
-		for (int i = 1; i < yGridCount; i++) {
-			pts[4 * i] = vertex[i -1][0];
+		for (int i = 1; i < size; i++) {
+			pts[4 * i] = vertex[i - 1][0];
 			pts[4 * i + 1] = height - vertex[i -1][1];
 			pts[4 * i + 2] = vertex[i][0];
 			pts[4 * i + 3] = height - vertex[i][1];
