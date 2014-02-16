@@ -38,12 +38,11 @@ public class TrendChartView extends View {
 	
 	private int lineColor = 0x4cf7d621;
 	private int lineStartColor = 0x4cffffff;
-	private int vertexColor = Color.RED;
 	
 	private int titleTextSize = 18;
 	private int xAxisTextSize = 12;
 	
-	private int lineStrokeWidth = 2;
+	private int lineStrokeWidth = 4;
 	private int titleStrokeWidth = 2;
 	private int xAxisStrokeWidth = 2;
 	
@@ -383,7 +382,7 @@ public class TrendChartView extends View {
 			vertex[i][1] = yAxisPadding + yGridSpace + getPointY(yValueList.get(i));
 		}
 
-		paint.setStrokeWidth(4);
+		paint.setStrokeWidth(lineStrokeWidth);
 		paint.setColor(lineColor);
 		float[] pts = new float[4 * xGridCount];
 		
